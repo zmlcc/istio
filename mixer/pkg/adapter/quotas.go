@@ -18,6 +18,8 @@ import (
 	"time"
 
 	rpc "github.com/gogo/googleapis/google/rpc"
+
+	"istio.io/istio/mixer/pkg/status"
 )
 
 type (
@@ -50,3 +52,7 @@ type (
 		Amount int64
 	}
 )
+
+func (r *QuotaResult) IsDefault() bool {
+	return status.IsOK(r.Status) && r.ValidDuration == 0 && r.Amount == 0
+}
