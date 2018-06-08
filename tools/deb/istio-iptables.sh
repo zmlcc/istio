@@ -58,7 +58,7 @@ if [ -r ${ISTIO_SIDECAR_CONFIG} ]; then
 fi
 
 # TODO: load all files from a directory, similar with ufw, to make it easier for automated install scripts
-# Ideally we should generate ufw (and similar) configs as well, in case user already has an iptables solution.
+# Ideally we should generate ufw (and similar) configs as well, in case user already has an ip6tables solution.
 
 PROXY_PORT=${ENVOY_PORT:-15001}
 PROXY_UID=
@@ -118,23 +118,23 @@ if [ -z "${PROXY_UID}" ]; then
 fi
 
 # Remove the old chains, to generate new configs.
-iptables -t nat -D PREROUTING -p tcp -j ISTIO_INBOUND 2>/dev/null
-iptables -t nat -D OUTPUT -p tcp -j ISTIO_OUTPUT 2>/dev/null
+ip6tables -t nat -D PREROUTING -p tcp -j ISTIO_INBOUND 2>/dev/null
+ip6tables -t nat -D OUTPUT -p tcp -j ISTIO_OUTPUT 2>/dev/null
 
 # Flush and delete the istio chains.
-iptables -t nat -F ISTIO_OUTPUT 2>/dev/null
-iptables -t nat -X ISTIO_OUTPUT 2>/dev/null
-iptables -t nat -F ISTIO_INBOUND 2>/dev/null
-iptables -t nat -X ISTIO_INBOUND 2>/dev/null
+ip6tables -t nat -F ISTIO_OUTPUT 2>/dev/null
+ip6tables -t nat -X ISTIO_OUTPUT 2>/dev/null
+ip6tables -t nat -F ISTIO_INBOUND 2>/dev/null
+ip6tables -t nat -X ISTIO_INBOUND 2>/dev/null
 # Must be last, the others refer to it
-iptables -t nat -F ISTIO_REDIRECT 2>/dev/null
-iptables -t nat -X ISTIO_REDIRECT 2>/dev/null
-iptables -t mangle -F ISTIO_INBOUND 2>/dev/null
-iptables -t mangle -X ISTIO_INBOUND 2>/dev/null
-iptables -t mangle -F ISTIO_DIVERT 2>/dev/null
-iptables -t mangle -X ISTIO_DIVERT 2>/dev/null
-iptables -t mangle -F ISTIO_TPROXY 2>/dev/null
-iptables -t mangle -X ISTIO_TPROXY 2>/dev/null
+ip6tables -t nat -F ISTIO_REDIRECT 2>/dev/null
+ip6tables -t nat -X ISTIO_REDIRECT 2>/dev/null
+ip6tables -t mangle -F ISTIO_INBOUND 2>/dev/null
+ip6tables -t mangle -X ISTIO_INBOUND 2>/dev/null
+ip6tables -t mangle -F ISTIO_DIVERT 2>/dev/null
+ip6tables -t mangle -X ISTIO_DIVERT 2>/dev/null
+ip6tables -t mangle -F ISTIO_TPROXY 2>/dev/null
+ip6tables -t mangle -X ISTIO_TPROXY 2>/dev/null
 
 if [ "${1:-}" = "clean" ]; then
   echo "Only cleaning, no new rules added"
@@ -176,11 +176,11 @@ set -x # echo on
 # when not using TPROXY.
 # In both chains, '-j RETURN' bypasses Envoy and '-j ISTIO_REDIRECT'
 # redirects to Envoy.
-iptables -t nat -N ISTIO_REDIRECT
-iptables -t nat -A ISTIO_REDIRECT -p tcp -j REDIRECT --to-port ${PROXY_PORT}
+ip6tables -t nat -N ISTIO_REDIRECT
+ip6tables -t nat -A ISTIO_REDIRECT -p tcp -j REDIRECT --to-port ${PROXY_PORT}
 
 # Handling of inbound ports. Traffic will be redirected to Envoy, which will process and forward
-# to the local service. If not set, no inbound port will be intercepted by istio iptables.
+# to the local service. If not set, no inbound port will be intercepted by istio ip6tables.
 if [ -n "${INBOUND_PORTS_INCLUDE}" ]; then
   if [ "${INBOUND_INTERCEPTION_MODE}" = "TPROXY" ] ; then
     # When using TPROXY, create a new chain for routing all inbound traffic to
@@ -189,9 +189,9 @@ if [ -n "${INBOUND_PORTS_INCLUDE}" ]; then
     # In the ISTIO_INBOUND chain, '-j ISTIO_DIVERT' reroutes to the loopback
     # interface.
     # Mark all inbound packets.
-    iptables -t mangle -N ISTIO_DIVERT
-    iptables -t mangle -A ISTIO_DIVERT -j MARK --set-mark ${INBOUND_TPROXY_MARK}
-    iptables -t mangle -A ISTIO_DIVERT -j ACCEPT
+    ip6tables -t mangle -N ISTIO_DIVERT
+    ip6tables -t mangle -A ISTIO_DIVERT -j MARK --set-mark ${INBOUND_TPROXY_MARK}
+    ip6tables -t mangle -A ISTIO_DIVERT -j ACCEPT
 
     # Route all packets marked in chain ISTIO_DIVERT using routing table ${INBOUND_TPROXY_ROUTE_TABLE}.
     ip -f inet rule add fwmark ${INBOUND_TPROXY_MARK} lookup ${INBOUND_TPROXY_ROUTE_TABLE}
@@ -203,99 +203,99 @@ if [ -n "${INBOUND_PORTS_INCLUDE}" ]; then
     # port.
     # In the ISTIO_INBOUND chain, '-j RETURN' bypasses Envoy and
     # '-j ISTIO_TPROXY' redirects to Envoy.
-    iptables -t mangle -N ISTIO_TPROXY
-    iptables -t mangle -A ISTIO_TPROXY ! -d 127.0.0.1/32 -p tcp -j TPROXY --tproxy-mark ${INBOUND_TPROXY_MARK}/0xffffffff --on-port ${PROXY_PORT}
+    ip6tables -t mangle -N ISTIO_TPROXY
+    ip6tables -t mangle -A ISTIO_TPROXY ! -d ::1/128 -p tcp -j TPROXY --tproxy-mark ${INBOUND_TPROXY_MARK}/0xffffffff --on-port ${PROXY_PORT}
 
     table=mangle
   else
     table=nat
   fi
-  iptables -t ${table} -N ISTIO_INBOUND
-  iptables -t ${table} -A PREROUTING -p tcp -j ISTIO_INBOUND
+  ip6tables -t ${table} -N ISTIO_INBOUND
+  ip6tables -t ${table} -A PREROUTING -p tcp -j ISTIO_INBOUND
 
   if [ "${INBOUND_PORTS_INCLUDE}" == "*" ]; then
     # Makes sure SSH is not redirected
-    iptables -t ${table} -A ISTIO_INBOUND -p tcp --dport 22 -j RETURN
+    ip6tables -t ${table} -A ISTIO_INBOUND -p tcp --dport 22 -j RETURN
     # Apply any user-specified port exclusions.
     if [ -n "${INBOUND_PORTS_EXCLUDE}" ]; then
       for port in ${INBOUND_PORTS_EXCLUDE}; do
-        iptables -t ${table} -A ISTIO_INBOUND -p tcp --dport ${port} -j RETURN
+        ip6tables -t ${table} -A ISTIO_INBOUND -p tcp --dport ${port} -j RETURN
       done
     fi
     # Redirect remaining inbound traffic to Envoy.
     if [ "${INBOUND_INTERCEPTION_MODE}" = "TPROXY" ]; then
       # If an inbound packet belongs to an established socket, route it to the
       # loopback interface.
-      iptables -t mangle -A ISTIO_INBOUND -p tcp -m socket -j ISTIO_DIVERT
+      ip6tables -t mangle -A ISTIO_INBOUND -p tcp -m socket -j ISTIO_DIVERT
       # Otherwise, it's a new connection. Redirect it using TPROXY.
-      iptables -t mangle -A ISTIO_INBOUND -p tcp -j ISTIO_TPROXY
+      ip6tables -t mangle -A ISTIO_INBOUND -p tcp -j ISTIO_TPROXY
     else
-      iptables -t nat -A ISTIO_INBOUND -p tcp -j ISTIO_REDIRECT
+      ip6tables -t nat -A ISTIO_INBOUND -p tcp -j ISTIO_REDIRECT
     fi
   else
     # User has specified a non-empty list of ports to be redirected to Envoy.
     for port in ${INBOUND_PORTS_INCLUDE}; do
       if [ "${INBOUND_INTERCEPTION_MODE}" = "TPROXY" ]; then
-        iptables -t mangle -A ISTIO_INBOUND -p tcp --dport ${port} -m socket -j ISTIO_DIVERT
-        iptables -t mangle -A ISTIO_INBOUND -p tcp --dport ${port} -j ISTIO_TPROXY
+        ip6tables -t mangle -A ISTIO_INBOUND -p tcp --dport ${port} -m socket -j ISTIO_DIVERT
+        ip6tables -t mangle -A ISTIO_INBOUND -p tcp --dport ${port} -j ISTIO_TPROXY
       else
-        iptables -t nat -A ISTIO_INBOUND -p tcp --dport ${port} -j ISTIO_REDIRECT
+        ip6tables -t nat -A ISTIO_INBOUND -p tcp --dport ${port} -j ISTIO_REDIRECT
       fi
     done
   fi
 fi
 
 # TODO: change the default behavior to not intercept any output - user may use http_proxy or another
-# iptables wrapper (like ufw). Current default is similar with 0.1
+# ip6tables wrapper (like ufw). Current default is similar with 0.1
 
 # Create a new chain for selectively redirecting outbound packets to Envoy.
-iptables -t nat -N ISTIO_OUTPUT
+ip6tables -t nat -N ISTIO_OUTPUT
 
 # Jump to the ISTIO_OUTPUT chain from OUTPUT chain for all tcp traffic.
-iptables -t nat -A OUTPUT -p tcp -j ISTIO_OUTPUT
+ip6tables -t nat -A OUTPUT -p tcp -j ISTIO_OUTPUT
 
 # Redirect app calls to back itself via Envoy when using the service VIP or endpoint
 # address, e.g. appN => Envoy (client) => Envoy (server) => appN.
-iptables -t nat -A ISTIO_OUTPUT -o lo ! -d 127.0.0.1/32 -j ISTIO_REDIRECT
+ip6tables -t nat -A ISTIO_OUTPUT -o lo ! -d ::1/128 -j ISTIO_REDIRECT
 
 for uid in ${PROXY_UID}; do
   # Avoid infinite loops. Don't redirect Envoy traffic directly back to
   # Envoy for non-loopback traffic.
-  iptables -t nat -A ISTIO_OUTPUT -m owner --uid-owner ${uid} -j RETURN
-  iptables -t nat -A ISTIO_OUTPUT -m owner --gid-owner ${uid} -j RETURN
+  ip6tables -t nat -A ISTIO_OUTPUT -m owner --uid-owner ${uid} -j RETURN
+  ip6tables -t nat -A ISTIO_OUTPUT -m owner --gid-owner ${uid} -j RETURN
 done
 
 # Skip redirection for Envoy-aware applications and
 # container-to-container traffic both of which explicitly use
 # localhost.
-iptables -t nat -A ISTIO_OUTPUT -d 127.0.0.1/32 -j RETURN
+ip6tables -t nat -A ISTIO_OUTPUT -d ::1/128 -j RETURN
 
 if [ -n "${OUTBOUND_IP_RANGES_INCLUDE}" ]; then
   if [ "${OUTBOUND_IP_RANGES_INCLUDE}" == "*" ]; then
     # Redirect exclusions must be applied before inclusions.
     if [ -n "${OUTBOUND_IP_RANGES_EXCLUDE}" ]; then
       for cidr in ${OUTBOUND_IP_RANGES_EXCLUDE}; do
-        iptables -t nat -A ISTIO_OUTPUT -d ${cidr} -j RETURN
+        ip6tables -t nat -A ISTIO_OUTPUT -d ${cidr} -j RETURN
       done
     fi
     # Redirect remaining outbound traffic to Envoy
-    iptables -t nat -A ISTIO_OUTPUT -j ISTIO_REDIRECT
+    ip6tables -t nat -A ISTIO_OUTPUT -j ISTIO_REDIRECT
   else
     # User has specified a non-empty list of cidrs to be redirected to Envoy.
     for cidr in ${OUTBOUND_IP_RANGES_INCLUDE}; do
-      iptables -t nat -A ISTIO_OUTPUT -d ${cidr} -j ISTIO_REDIRECT
+      ip6tables -t nat -A ISTIO_OUTPUT -d ${cidr} -j ISTIO_REDIRECT
     done
     # All other traffic is not redirected.
-    iptables -t nat -A ISTIO_OUTPUT -j RETURN
+    ip6tables -t nat -A ISTIO_OUTPUT -j RETURN
   fi
 fi
 
 # If ENABLE_INBOUND_IPV6 is unset (default unset), restrict IPv6 traffic.
-set +o nounset
-if [ -z "${ENABLE_INBOUND_IPV6}" ]; then
-  # Drop all inbound traffic except established connections.
-  # TODO: support receiving IPv6 traffic in the same way as IPv4.
-  ip6tables -F INPUT || true
-  ip6tables -A INPUT -m state --state ESTABLISHED -j ACCEPT || true
-  ip6tables -A INPUT -j REJECT || true
-fi
+# set +o nounset
+# if [ -z "${ENABLE_INBOUND_IPV6}" ]; then
+#   # Drop all inbound traffic except established connections.
+#   # TODO: support receiving IPv6 traffic in the same way as IPv4.
+#   ip6tables -F INPUT || true
+#   ip6tables -A INPUT -m state --state ESTABLISHED -j ACCEPT || true
+#   ip6tables -A INPUT -j REJECT || true
+# fi
