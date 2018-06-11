@@ -236,7 +236,8 @@ func receiveThread(con *XdsConnection, reqChannel chan *xdsapi.DiscoveryRequest,
 // StreamAggregatedResources implements the ADS interface.
 func (s *DiscoveryServer) StreamAggregatedResources(stream ads.AggregatedDiscoveryService_StreamAggregatedResourcesServer) error {
 	peerInfo, ok := peer.FromContext(stream.Context())
-	peerAddr := "0.0.0.0"
+	// peerAddr := "0.0.0.0"
+	peerAddr := "::0"
 	if ok {
 		peerAddr = peerInfo.Addr.String()
 	}

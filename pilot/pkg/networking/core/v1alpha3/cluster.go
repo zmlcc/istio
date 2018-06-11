@@ -174,7 +174,7 @@ func (configgen *ConfigGeneratorImpl) buildInboundClusters(env model.Environment
 	for _, instance := range instances {
 		// This cluster name is mainly for stats.
 		clusterName := model.BuildSubsetKey(model.TrafficDirectionInbound, "", instance.Service.Hostname, instance.Endpoint.ServicePort.Port)
-		address := util.BuildAddress("127.0.0.1", uint32(instance.Endpoint.Port))
+		address := util.BuildAddress("::1", uint32(instance.Endpoint.Port))
 		localCluster := buildDefaultCluster(env, clusterName, v2.Cluster_STATIC, []*core.Address{&address})
 		setUpstreamProtocol(localCluster, instance.Endpoint.ServicePort)
 		// call plugins
@@ -202,7 +202,7 @@ func (configgen *ConfigGeneratorImpl) buildInboundClusters(env model.Environment
 	// Add a passthrough cluster for traffic to management ports (health check ports)
 	for _, port := range managementPorts {
 		clusterName := model.BuildSubsetKey(model.TrafficDirectionInbound, "", ManagementClusterHostname, port.Port)
-		address := util.BuildAddress("127.0.0.1", uint32(port.Port))
+		address := util.BuildAddress("::1", uint32(port.Port))
 		mgmtCluster := buildDefaultCluster(env, clusterName, v2.Cluster_STATIC, []*core.Address{&address})
 		setUpstreamProtocol(mgmtCluster, port)
 		clusters = append(clusters, mgmtCluster)

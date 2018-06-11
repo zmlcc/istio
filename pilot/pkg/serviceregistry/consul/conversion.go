@@ -92,7 +92,7 @@ func convertService(endpoints []*api.CatalogService) *model.Service {
 
 	out := &model.Service{
 		Hostname:     serviceHostname(name),
-		Address:      "0.0.0.0",
+		Address:      "::0",
 		Ports:        svcPorts,
 		ExternalName: model.Hostname(externalName),
 		MeshExternal: meshExternal,

@@ -106,10 +106,12 @@ const (
 	RedisDefaultOpTimeout = 30 * time.Second
 
 	// WildcardAddress binds to all IP addresses
-	WildcardAddress = "0.0.0.0"
+	// WildcardAddress = "0.0.0.0"
+	WildcardAddress = "::0"
 
 	// LocalhostAddress for local binding
-	LocalhostAddress = "127.0.0.1"
+	// LocalhostAddress = "127.0.0.1"
+	LocalhostAddress = "::1"
 
 	// EgressTraceOperation denotes the name of trace operation for Envoy
 	EgressTraceOperation = "egress"

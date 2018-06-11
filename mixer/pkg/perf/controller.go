@@ -50,7 +50,7 @@ func newController() (*Controller, error) {
 	// Setup a TCP listener at a random port.
 	var err error
 	var l net.Listener
-	if l, err = net.Listen("tcp", "127.0.0.1:"); err != nil {
+	if l, err = net.Listen("tcp", "[::1]:"); err != nil {
 		return nil, err
 	}
 	c.listener = l

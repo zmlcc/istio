@@ -89,7 +89,7 @@ func (s *ClientServer) initializeRPCServer() error {
 	// Setup ClientServer's rpc rpcServer first. We will publish this to the controller next.
 	var err error
 	var l net.Listener
-	if l, err = net.Listen("tcp", "127.0.0.1:"); err != nil {
+	if l, err = net.Listen("tcp", "[::1]:"); err != nil {
 		return err
 	}
 	s.listener = l

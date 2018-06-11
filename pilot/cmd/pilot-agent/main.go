@@ -93,7 +93,7 @@ var (
 				if registry == serviceregistry.KubernetesRegistry {
 					role.IPAddress = os.Getenv("INSTANCE_IP")
 				} else {
-					ipAddr := "127.0.0.1"
+					ipAddr := "::1"
 					if ok := proxy.WaitForPrivateNetwork(); ok {
 						ipAddr = proxy.GetPrivateIP().String()
 						log.Infof("Obtained private IP %v", ipAddr)

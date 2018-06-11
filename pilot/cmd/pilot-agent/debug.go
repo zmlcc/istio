@@ -45,7 +45,7 @@ var (
 		Args:  cobra.MinimumNArgs(1),
 		RunE: func(c *cobra.Command, args []string) error {
 			d := &debug{
-				envoyAdminAddress:    "127.0.0.1:15000",
+				envoyAdminAddress:    "[::1]:15000",
 				staticConfigLocation: "/etc/istio/proxy",
 			}
 			return d.run(args)

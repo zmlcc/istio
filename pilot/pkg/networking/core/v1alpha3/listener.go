@@ -57,10 +57,12 @@ const (
 	VirtualListenerName = "virtual"
 
 	// WildcardAddress binds to all IP addresses
-	WildcardAddress = "0.0.0.0"
+	// WildcardAddress = "0.0.0.0"
+	WildcardAddress = "::0"
 
 	// LocalhostAddress for local binding
-	LocalhostAddress = "127.0.0.1"
+	// LocalhostAddress = "127.0.0.1"
+	LocalhostAddress = "::1"
 )
 
 var (
@@ -507,7 +509,8 @@ func buildMgmtPortListeners(managementPorts model.PortList, managementIP string)
 	listeners := make([]*xdsapi.Listener, 0, len(managementPorts))
 
 	if managementIP == "" {
-		managementIP = "127.0.0.1"
+		// managementIP = "127.0.0.1"
+		managementIP = "::1"
 	}
 
 	// assumes that inbound connections/requests are sent to the endpoint address
