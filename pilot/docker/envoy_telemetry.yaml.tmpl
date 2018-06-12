@@ -2,7 +2,7 @@ admin:
   access_log_path: /dev/stdout
   address:
     socket_address:
-      address: 127.0.0.1
+      address: "::1"
       port_value: 15000
 static_resources:
   clusters:
@@ -15,7 +15,7 @@ static_resources:
     connect_timeout: 1.000s
     hosts:
     - socket_address:
-        address: 127.0.0.1
+        address: "::1"
         port_value: 9092
     http2_protocol_options: {}
     name: in.9092
@@ -29,7 +29,7 @@ static_resources:
   listeners:
   - address:
       socket_address:
-        address: 0.0.0.0
+        address: "::0"
         port_value: 15004
     filter_chains:
     - filters:
@@ -101,7 +101,7 @@ static_resources:
     name: "15004"
   - address:
       socket_address:
-        address: 0.0.0.0
+        address: "::0"
         port_value: 9091
     filter_chains:
     - filters:

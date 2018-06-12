@@ -21,7 +21,7 @@
     "access_log_path": "/dev/stdout",
     "address": {
       "socket_address": {
-        "address": "127.0.0.1",
+        "address": "::1",
         "port_value": 15000
       }
     }
