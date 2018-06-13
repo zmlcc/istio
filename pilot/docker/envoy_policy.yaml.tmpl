@@ -72,9 +72,9 @@ static_resources:
           generate_request_id: true
           http_filters:
           - config:
-              default_destination_service: istio-policy.{{ .PodNamespace }}.svc.cluster.local
+              default_destination_service: istio-policy.{{ .PodNamespace }}.svc.{{ .ClusterDomain }}
               service_configs:
-                istio-policy.{{ .PodNamespace }}.svc.cluster.local:
+                istio-policy.{{ .PodNamespace }}.svc.{{ .ClusterDomain }}:
                   disable_check_calls: true
 {{- if .DisableReportCalls }}
                   disable_report_calls: true
@@ -82,7 +82,7 @@ static_resources:
                   mixer_attributes:
                     attributes:
                       destination.service:
-                        string_value: istio-policy.{{ .PodNamespace }}.svc.cluster.local
+                        string_value: istio-policy.{{ .PodNamespace }}.svc.{{ .ClusterDomain }}
                       destination.uid:
                         string_value: kubernetes://{{ .PodName }}.{{ .PodNamespace }}
                       destination.ip:
@@ -99,7 +99,7 @@ static_resources:
             virtual_hosts:
             - domains:
               - '*'
-              name: istio-policy.{{ .PodNamespace }}.svc.cluster.local
+              name: istio-policy.{{ .PodNamespace }}.svc.{{ .ClusterDomain }}
               routes:
               - decorator:
                   operation: Check
@@ -144,9 +144,9 @@ static_resources:
           generate_request_id: true
           http_filters:
           - config:
-              default_destination_service: istio-policy.{{ .PodNamespace }}.svc.cluster.local
+              default_destination_service: istio-policy.{{ .PodNamespace }}.svc.{{ .ClusterDomain }}
               service_configs:
-                istio-policy.{{ .PodNamespace }}.svc.cluster.local:
+                istio-policy.{{ .PodNamespace }}.svc.{{ .ClusterDomain }}:
                   disable_check_calls: true
 {{- if .DisableReportCalls }}
                   disable_report_calls: true
@@ -154,7 +154,7 @@ static_resources:
                   mixer_attributes:
                     attributes:
                       destination.service:
-                        string_value: istio-policy.{{ .PodNamespace }}.svc.cluster.local
+                        string_value: istio-policy.{{ .PodNamespace }}.svc.{{ .ClusterDomain }}
                       destination.uid:
                         string_value: kubernetes://{{ .PodName }}.{{ .PodNamespace }}
                       destination.ip:
@@ -171,7 +171,7 @@ static_resources:
             virtual_hosts:
             - domains:
               - '*'
-              name: istio-policy.{{ .PodNamespace }}.svc.cluster.local
+              name: istio-policy.{{ .PodNamespace }}.svc.{{ .ClusterDomain }}
               routes:
               - decorator:
                   operation: Check

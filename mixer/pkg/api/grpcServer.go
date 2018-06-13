@@ -67,6 +67,8 @@ func NewGRPCServer(dispatcher dispatcher.Dispatcher, gp *pool.GoroutinePool) mix
 		globalDict[list[i]] = int32(i)
 	}
 
+	lg.SetOutputLevel(log.DebugLevel)
+
 	return &grpcServer{
 		dispatcher:     dispatcher,
 		gp:             gp,

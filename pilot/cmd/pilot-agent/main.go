@@ -207,6 +207,11 @@ var (
 				opts := make(map[string]string)
 				opts["PodName"] = os.Getenv("POD_NAME")
 				opts["PodNamespace"] = os.Getenv("POD_NAMESPACE")
+				if clusterDomain := os.Getenv("CLUSTER_DOMAIN"); clusterDomain != "" {
+					opts["ClusterDomain"] = clusterDomain
+				} else {
+					opts["ClusterDomain"] = "cluster.local"
+				}
 
 				// protobuf encoding of IP_ADDRESS type
 				opts["PodIP"] = base64.StdEncoding.EncodeToString(net.ParseIP(os.Getenv("INSTANCE_IP")))
